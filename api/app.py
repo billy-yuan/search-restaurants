@@ -7,15 +7,8 @@ E = SbertEncoder()
 
 @app.get("/")
 def read_root():
-    import boto3
 
-    s3 = boto3.resource('s3')
-
-    result = []
-    for bucket in s3.buckets.all():
-        result.append(bucket.name)
-
-    return result
+    return "Home"
 
 
 @app.get("/encode")
