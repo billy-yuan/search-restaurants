@@ -9,15 +9,15 @@ FROM python:3.8
 WORKDIR /
 
 # copy requirements to working directory
-# COPY requirements.txt requirements.txt
+COPY requirements.txt requirements.txt
 
 # install dependencies
-# RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # copy source code to working directory
 COPY . .
 
 # run server
-# CMD uvicorn api.app:app --host=0.0.0.0 --port=${PORT:-8000}
+CMD uvicorn api.app:app --host=0.0.0.0 --port=${PORT:-8000}
 
 
