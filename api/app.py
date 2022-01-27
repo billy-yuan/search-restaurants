@@ -7,8 +7,7 @@ E = SbertEncoder()
 
 @app.get("/")
 def read_root():
-
-    return "Home"
+    return "Encoder"
 
 
 @app.get("/encode")
