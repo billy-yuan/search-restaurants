@@ -1,7 +1,9 @@
+anyio==3.5.0
 autopep8==1.6.0
 certifi==2021.10.8
 charset-normalizer==2.0.10
 click==8.0.3
+fastapi==0.73.0
 filelock==3.4.2
 huggingface-hub==0.4.0
 idna==3.3
@@ -11,6 +13,7 @@ numpy==1.22.1
 packaging==21.3
 Pillow==9.0.0
 pycodestyle==2.8.0
+pydantic==1.9.0
 pyparsing==3.0.7
 PyYAML==6.0
 regex==2022.1.18
@@ -21,6 +24,8 @@ scipy==1.7.3
 sentence-transformers==2.1.0
 sentencepiece==0.1.96
 six==1.16.0
+sniffio==1.2.0
+starlette==0.17.1
 threadpoolctl==3.0.0
 tokenizers==0.10.3
 toml==0.10.2
