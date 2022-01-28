@@ -21,11 +21,21 @@ class Indexer(ABC):
         pass
 
     @abstractmethod
-    def search(self, top_k: int = 5):
+    def search(self, vector, top_k: int = 5):
         pass
 
     @abstractmethod
     def write_to_s3(self):
+        """
+        Write current index to s3
+        """
+        pass
+
+    @abstractmethod
+    def create_new_index(self):
+        """
+        Create a new index and set `self.index` to the new index.
+        """
         pass
 
 
@@ -53,7 +63,7 @@ class FaissIndexer(Indexer):
             raise FileNotFoundError(
                 "Could not find index at {}. Please make new index first.".format(file_name))
 
-    def add_to_index(self, vector: str):
+    def add_to_index(self, vector):
         next_id = self.index.ntotal
         self.index.add_with_ids(vector, [next_id])
 
@@ -75,11 +85,15 @@ class FaissIndexer(Indexer):
         return list(closest_ids)
 
     def write_to_s3(self, file_name=FILE_NAME, bucket_name=BUCKET_NAME):
+        print("Write index to file")
         faiss.write_index(self.index, file_name)
+        print("Write index to s3")
         upload_file_to_s3(file_name, bucket_name)
 
-    def __create_new_index(self, num_dimensions: int, index_path: str = FILE_NAME):
+    def create_new_index(self, num_dimensions: int, index_path: str = FILE_NAME):
+        print("Creating new index")
         index = faiss.IndexFlatL2(num_dimensions)
         index = faiss.IndexIDMap(index)
 
-        faiss.write_index(index, index_path)
+        self.index = index
+        print("New index created and set to self.index")
