@@ -4,3 +4,4 @@ lib
 .env
 pyvenv.cfg
 __pycache__
+search_service/download

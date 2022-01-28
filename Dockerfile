@@ -17,6 +17,9 @@ RUN pip install -r requirements.txt
 # copy source code to working directory
 COPY . .
 
+# make downloads folder
+RUN mkdir search_service/download
+
 # run server
 CMD uvicorn api.app:app --host=0.0.0.0 --port=${PORT:-8000}
 
