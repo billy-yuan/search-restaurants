@@ -37,12 +37,14 @@ class FaissIndexer(Indexer):
         """
         Try to load index from file. If not, download from S3.
         """
-        print("Loading index...")
+        print("Loading index from path {}...".format(FILE_NAME))
         if os.path.exists(FILE_NAME):
+            print("{} exists. Loading...".format(FILE_NAME))
             response = faiss.read_index(FILE_NAME)
             print("Loaded index with {} entries from disk.".format(response.ntotal))
             return response
 
+        print("File does not exist. Will download...")
         if download_file_from_s3(FILE_NAME, BUCKET_NAME, FILE_NAME):
             print("Downloading index from s3")
             response = faiss.read_index(FILE_NAME)
