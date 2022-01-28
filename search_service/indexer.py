@@ -4,15 +4,13 @@ from search_service.s3_helpers import download_file_from_s3, upload_file_to_s3, 
 import faiss
 import os
 
-FILE_NAME = load_env_var("EMBEDDING_PATH")
+FILE_NAME = load_env_var("EMBEDDING_PATH")  # name of file on disk
 BUCKET_NAME = load_env_var("BUCKET_NAME")
+# name of s3 object. Same as file name by default
+S3_OBJECT_NAME = load_env_var("EMBEDDING_PATH")
 
 
 class Indexer(ABC):
-
-    def __init__(self, index_path: str):
-        self.index_path = index_path
-        self.index = self.load_index()
 
     @abstractmethod
     def load_index(self):
@@ -32,27 +30,28 @@ class Indexer(ABC):
 
 
 class FaissIndexer(Indexer):
-
-    def load_index(self):
+    def load_index(self,
+                   file_name: str = FILE_NAME,
+                   bucket_name: str = BUCKET_NAME) -> None:
         """
         Try to load index from file. If not, download from S3.
         """
-        print("Loading index from path {}...".format(FILE_NAME))
-        if os.path.exists(FILE_NAME):
-            print("{} exists. Loading...".format(FILE_NAME))
-            response = faiss.read_index(FILE_NAME)
+        print("Loading index from path {}...".format(file_name))
+        if os.path.exists(file_name):
+            print("{} exists. Loading...".format(file_name))
+            response = faiss.read_index(file_name)
             print("Loaded index with {} entries from disk.".format(response.ntotal))
-            return response
+            self.index = response
 
         print("File does not exist. Will download...")
-        if download_file_from_s3(FILE_NAME, BUCKET_NAME, FILE_NAME):
+        if download_file_from_s3(file_name, bucket_name, s3_object_name=file_name):
             print("Downloading index from s3")
-            response = faiss.read_index(FILE_NAME)
+            response = faiss.read_index(file_name)
             print("Loaded index with {} entries from.".format(response.ntotal))
-            return response
+            self.index = response
         else:
             raise FileNotFoundError(
-                "Could not find index at {}. Please make new index first.".format(FILE_NAME))
+                "Could not find index at {}. Please make new index first.".format(file_name))
 
     def add_to_index(self, vector: str):
         next_id = self.index.ntotal
@@ -75,6 +74,12 @@ class FaissIndexer(Indexer):
                 closest_ids.append(int(result_id))
         return list(closest_ids)
 
-    def write_to_s3(self):
-        faiss.write_index(self.index, FILE_NAME)
-        upload_file_to_s3(FILE_NAME, BUCKET_NAME)
+    def write_to_s3(self, file_name=FILE_NAME, bucket_name=BUCKET_NAME):
+        faiss.write_index(self.index, file_name)
+        upload_file_to_s3(file_name, bucket_name)
+
+    def __create_new_index(self, num_dimensions: int, index_path: str = FILE_NAME):
+        index = faiss.IndexFlatL2(num_dimensions)
+        index = faiss.IndexIDMap(index)
+
+        faiss.write_index(index, index_path)

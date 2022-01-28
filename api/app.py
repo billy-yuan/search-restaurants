@@ -8,7 +8,8 @@ FILE_NAME = load_env_var("EMBEDDING_PATH")
 
 app = FastAPI()
 E = SbertEncoder()
-F = FaissIndexer(FILE_NAME)
+F = FaissIndexer()
+F.load_index()
 
 
 @app.get("/")
