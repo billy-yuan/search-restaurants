@@ -30,14 +30,14 @@ def test_search():
 
     # Make index
     index = faiss.IndexFlatIP(num_dimensions)
-    index = faiss.IndexIDMap(index)
-    index.add_with_ids(encoded_data, np.array(range(0, len(data))))
+    index.add(encoded_data)
 
     # Add new data
     new_data = "Omelettes are the best for breakfast"
     data.append(new_data)
     new_encoded_data = encoder.encode([new_data])
-    index.add_with_ids(new_encoded_data, np.array([index.ntotal]))
+    print(new_encoded_data)
+    index.add(new_encoded_data)
 
     def search(query: str, top_k):
         query_vector = encoder.encode([query])
@@ -55,6 +55,7 @@ def test_search():
 
     search("moon", 1)
     search("breakfast", 1)
+    search("shadow", 1)
 
 
 def make_test_index(num_rows: int = 100000, d: int = 384):
