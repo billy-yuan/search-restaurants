@@ -63,9 +63,8 @@ class FaissIndexer(Indexer):
             print("Loaded index with {} entries from disk.".format(response.ntotal))
             self.index = response
 
-        print("File does not exist. Will download...")
-        if download_file_from_s3(file_name, bucket_name, s3_object_name=file_name):
-            print("Downloading index from s3")
+        elif download_file_from_s3(file_name, bucket_name, s3_object_name=file_name):
+            print("File does not exist. Will download from s3...")
             response = faiss.read_index(file_name)
             print("Loaded index with {} entries from.".format(response.ntotal))
             self.index = response
