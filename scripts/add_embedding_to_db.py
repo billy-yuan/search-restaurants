@@ -1,4 +1,3 @@
-from turtle import update
 from search_service.indexer import FaissIndexer
 from search_service.encoder import SbertEncoder
 import numpy as np
