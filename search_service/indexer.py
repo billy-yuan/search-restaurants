@@ -12,6 +12,9 @@ S3_OBJECT_NAME = load_env_var("EMBEDDING_PATH")
 
 class Indexer(ABC):
 
+    def __init__(self):
+        self.index = None
+
     @abstractmethod
     def load_index(self):
         pass
@@ -38,6 +41,13 @@ class Indexer(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_next_id(self):
+        """
+        Generate the ID for the next item added.
+        """
+        pass
+
 
 class FaissIndexer(Indexer):
     def load_index(self,
@@ -60,16 +70,13 @@ class FaissIndexer(Indexer):
             print("Loaded index with {} entries from.".format(response.ntotal))
             self.index = response
         else:
-            raise FileNotFoundError(
+            print(
                 "Could not find index at {}. Please make new index first.".format(file_name))
 
     def add_to_index(self, vector):
-        next_id = self.index.ntotal
-        self.index.add_with_ids(vector, [next_id])
+        self.index.add(vector)
 
-        # Update db with new index
-
-    def search(self, vector, top_k: int = 5):
+    def search(self, vector, top_k: int = 20):
         print("Searching for closest...")
         # D = distance matrix
         # I = index matrix
@@ -93,7 +100,13 @@ class FaissIndexer(Indexer):
     def create_new_index(self, num_dimensions: int, index_path: str = FILE_NAME):
         print("Creating new index")
         index = faiss.IndexFlatL2(num_dimensions)
-        index = faiss.IndexIDMap(index)
 
         self.index = index
         print("New index created and set to self.index")
+
+    def get_next_id(self):
+        if self.index is None:
+            raise ValueError(
+                "No index found. Please load or create an index first.")
+
+        return self.index.ntotal
