@@ -77,6 +77,3 @@ def make_test_index(num_rows: int = 100000, d: int = 384):
 
     print("Writing index to {}".format(FILE_NAME))
     faiss.write_index(index, FILE_NAME)
-
-
-test_search()
