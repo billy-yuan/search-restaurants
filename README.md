@@ -7,6 +7,8 @@ For the text search, semantic search is applied:
 * For fast searching of high dimensional vectors, [FAISS](https://github.com/facebookresearch/faiss) is used.
 * MongoDb is the database.
 
+Try the API [here](https://search-eater.herokuapp.com/docs#/default/get_results_search_get). It may be slow since it is hosted on a low cost Heroku server.
+
 ## To build a docker image
 
 `docker build -t <image name> .`
