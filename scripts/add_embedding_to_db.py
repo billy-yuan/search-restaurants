@@ -1,8 +1,15 @@
+# Hacky solution since Heroku can't import from search_service without this.
+import sys
+import os.path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from search_service.indexer import FaissIndexer
 from search_service.encoder import SbertEncoder
 import numpy as np
 from pymongo.collection import Collection
 from database.mongodb import prod_database as db
+
+
 
 # Get the number of dimensions by running a test string through the encoder
 E = SbertEncoder()
