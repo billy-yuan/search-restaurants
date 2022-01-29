@@ -88,10 +88,10 @@ def add_index_to_db(collection: Collection,
 
         index_id += 1
         i += 1
-    I.write_to_s3()
 
     if i > 1:
         print("Finished adding indexes.")
+        I.write_to_s3()
     else:
         print("No documents needed to be embedded.")
 
