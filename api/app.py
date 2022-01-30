@@ -1,5 +1,4 @@
-from operator import index
-from typing import List
+from typing import Any, List
 from fastapi import FastAPI
 from search_service.encoder import SbertEncoder
 from search_service.indexer import FaissIndexer
@@ -59,6 +58,10 @@ def get_restaurant_results_payload(index_ids: List[int]):
         if not restaurant:
             continue
 
+        # Skip restaurant if restaurant is closed
+        if restaurant["is_closed"] == True:
+            continue
+
         # Get blurbs for the restaurant
         restaurant_blurbs = db.blurb.find(
             {"restaurant_id": restaurant_id})
@@ -87,7 +90,18 @@ def get_restaurant_results_payload(index_ids: List[int]):
         result.append({
             "_id": str(restaurant["_id"]),
             "name": restaurant["name"],
+            "address": get_restaurant_address(restaurant),
+            "price": restaurant["price"],
+            "categories": restaurant["categories"] if "categories" in restaurant else [],
+            "coordinates": restaurant["coordinates"],
             "articles": article_payload
         })
         restaurant_ids.add(restaurant_id)
     return result
+
+
+def get_restaurant_address(restaurant: "dict[str, Any]"):
+    if restaurant["location"] and "display_address" in restaurant["location"]:
+        return restaurant["location"]["display_address"]
+    else:
+        return restaurant["address"]
