@@ -8,7 +8,7 @@ class ExactSearch:
     def __init__(self, collection: Collection):
         self.collection = collection
 
-    def search(self, text_query: str, min_score: float = 2.5) -> List["dict[str, Any]"]:
+    def search(self, text_query: str, min_score: float = 3) -> List["dict[str, Any]"]:
         stage_match_text = {
             '$search': {
                 'index': 'text',
