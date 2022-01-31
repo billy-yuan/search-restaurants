@@ -5,6 +5,7 @@ from search_service.indexer import FaissIndexer
 from search_service.s3_helpers import load_env_var
 from database.mongodb import prod_database as db
 from bson.objectid import ObjectId
+from search_service.exact_search import ExactSearch
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
 
@@ -22,25 +23,41 @@ def read_root():
 @app.get("/search")
 def get_results(q: str):
     if q:
-        embedding = E.encode([q])
-        result = F.search(embedding)
-        payload = get_restaurant_results_payload(result)
+        exact_search_results = get_exact_search_results(q)
+        semantic_search_results = get_semantic_search_results(q)
+
+        # Dedupe + combine search results
+        combined_results = exact_search_results + semantic_search_results
+        deduped_results = {}
+
+        for result in combined_results:
+            _id = str(result["_id"])
+            if _id not in deduped_results:
+                deduped_results[_id] = result
+
+        payload = []
+
+        for _id in deduped_results:
+            payload.append(deduped_results[_id])
         return payload
+
     else:
         return "Need query"
 
+
+def get_restaurant_address(restaurant: "dict[str, Any]") -> str:
+    if restaurant["location"] and "display_address" in restaurant["location"]:
+        return restaurant["location"]["display_address"]
+    else:
+        return restaurant["address"]
+
+
 # TODO: Refactor + clean up
-
-
-def get_restaurant_results_payload(index_ids: List[int]):
+def get_restaurant_payload_from_blurbs(_filter: "dict[str, Any]") -> "List[dict[str, Any]]":
     result = []
 
-    # Get all blurbs with index ids
-    _index_id_filter = {
-        "embedding_index_id": {"$in": index_ids}
-    }
-
-    blurbs = db.blurb.find(_index_id_filter)
+    # Get all blurbs
+    blurbs = db.blurb.find(_filter)
 
     # Store unique restaurants. Some restaurants may have more than 1 blurb.
     restaurant_ids = set()
@@ -100,8 +117,48 @@ def get_restaurant_results_payload(index_ids: List[int]):
     return result
 
 
-def get_restaurant_address(restaurant: "dict[str, Any]"):
-    if restaurant["location"] and "display_address" in restaurant["location"]:
-        return restaurant["location"]["display_address"]
-    else:
-        return restaurant["address"]
+def get_semantic_search_results(q: str):
+    embedding = E.encode([q])
+    index_ids = F.search(embedding)
+    _index_id_filter = {
+        "embedding_index_id": {"$in": index_ids}
+    }
+    return get_restaurant_payload_from_blurbs(_index_id_filter)
+
+
+def get_exact_search_results(q: str) -> "List[dict[str, Any]]":
+    article_exact_search = ExactSearch(db.article)
+    restaurant_exact_search = ExactSearch(db.restaurant)
+    blurb_exact_search = ExactSearch(db.blurb)
+
+    # Articles
+    articles = article_exact_search.search(q)
+    article_filter = {
+        "article_id": {"$in": [article["_id"] for article in articles]}}
+    article_payload = get_restaurant_payload_from_blurbs(article_filter)
+
+    # Restaurants
+    restaurants = restaurant_exact_search.search(q)
+    restaurant_filter = {
+        "restaurant_id": {"$in": [restaurant["_id"] for restaurant in restaurants]}
+    }
+
+    restaurant_payload = get_restaurant_payload_from_blurbs(
+        restaurant_filter)
+
+    # Blurbs
+    blurbs = blurb_exact_search.search(q)
+    blurb_filter = {
+        "_id": {"$in": [blurb["_id"] for blurb in blurbs]}
+    }
+    blurb_payload = get_restaurant_payload_from_blurbs(blurb_filter)
+    # Make payload
+
+    combined_payload = restaurant_payload + article_payload + blurb_payload
+    payload = {str(item["_id"]): item for item in combined_payload}
+
+    result = []
+    for _ in payload:
+        result.append(payload[_])
+
+    return result
