@@ -14,6 +14,12 @@ E = SbertEncoder()
 F = FaissIndexer()
 F.load_index()
 
+min_scores = {
+    "restaurant": float(load_env_var("EXACT_SEARCH_MIN_SCORE_RESTAURANT")),
+    "article": float(load_env_var("EXACT_SEARCH_MIN_SCORE_ARTICLE")),
+    "blurb": float(load_env_var("EXACT_SEARCH_MIN_SCORE_BLURB"))
+}
+
 
 @app.get("/")
 def read_root():
@@ -132,13 +138,13 @@ def get_exact_search_results(q: str) -> "List[dict[str, Any]]":
     blurb_exact_search = ExactSearch(db.blurb)
 
     # Articles
-    articles = article_exact_search.search(q)
+    articles = article_exact_search.search(q, min_scores["article"])
     article_filter = {
         "article_id": {"$in": [article["_id"] for article in articles]}}
     article_payload = get_restaurant_payload_from_blurbs(article_filter)
 
     # Restaurants
-    restaurants = restaurant_exact_search.search(q)
+    restaurants = restaurant_exact_search.search(q, min_scores["restaurant"])
     restaurant_filter = {
         "restaurant_id": {"$in": [restaurant["_id"] for restaurant in restaurants]}
     }
@@ -147,7 +153,7 @@ def get_exact_search_results(q: str) -> "List[dict[str, Any]]":
         restaurant_filter)
 
     # Blurbs
-    blurbs = blurb_exact_search.search(q)
+    blurbs = blurb_exact_search.search(q, min_scores["blurb"])
     blurb_filter = {
         "_id": {"$in": [blurb["_id"] for blurb in blurbs]}
     }
