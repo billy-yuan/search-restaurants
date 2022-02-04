@@ -15,7 +15,7 @@ origins = [
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["*"],
@@ -117,7 +117,7 @@ def get_restaurant_payload_from_blurbs(_filter: "dict[str, Any]") -> "List[dict[
                 "_id": str(article["_id"]),
                 "title": article["title"],
                 "url": article["url"],
-                "text": blurb_texts[str(article["_id"])]
+                # "text": blurb_texts[str(article["_id"])]
             } for article in articles]
 
         # Add payload
