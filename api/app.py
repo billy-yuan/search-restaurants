@@ -1,15 +1,26 @@
 from typing import Any, List
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from search_service.encoder import SbertEncoder
 from search_service.indexer import FaissIndexer
 from search_service.s3_helpers import load_env_var
 from database.mongodb import prod_database as db
 from bson.objectid import ObjectId
 from search_service.exact_search import ExactSearch
+from fastapi.middleware.cors import CORSMiddleware
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
-
+origins = [
+    "http://localhost:3000"
+]
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
 E = SbertEncoder()
 F = FaissIndexer()
 F.load_index()
@@ -48,7 +59,7 @@ def get_results(q: str):
         return payload
 
     else:
-        return "Need query"
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
 
 def get_restaurant_address(restaurant: "dict[str, Any]") -> str:
