@@ -70,6 +70,18 @@ def get_results(q: str, articles: Optional[str] = None, categories: Optional[str
                 return False
             payload = list(filter(filter_articles, payload))
 
+        # Filter categories
+        if categories and len(categories) > 0:
+            categories_to_include = set(categories.split(","))
+
+            def filter_articles(entry):
+                for category in entry["categories"]:
+                    if category in categories_to_include:
+                        return True
+                return False
+
+            payload = list(filter(filter_articles, payload))
+
         return payload
 
     else:
