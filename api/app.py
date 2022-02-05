@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import FastAPI, HTTPException
 from search_service.encoder import SbertEncoder
 from search_service.indexer import FaissIndexer
@@ -38,7 +38,8 @@ def read_root():
 
 
 @app.get("/search")
-def get_results(q: str):
+def get_results(q: str, articles: Optional[str] = None, categories: Optional[str] = None):
+
     if q:
         exact_search_results = get_exact_search_results(q)
         semantic_search_results = get_semantic_search_results(q)
@@ -56,6 +57,19 @@ def get_results(q: str):
 
         for _id in deduped_results:
             payload.append(deduped_results[_id])
+
+        # Filter results. TODO: Refactor
+        # payload = filter_results(payload)
+        if articles and len(articles) > 0:
+            articles_to_include = set(articles.split(","))
+
+            def filter_articles(entry):
+                for article in entry["articles"]:
+                    if article["_id"] in articles_to_include:
+                        return True
+                return False
+            payload = list(filter(filter_articles, payload))
+
         return payload
 
     else:
