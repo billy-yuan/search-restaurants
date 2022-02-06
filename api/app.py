@@ -143,6 +143,7 @@ def get_restaurant_payload_from_blurbs(_filter: "dict[str, Any]") -> "List[dict[
                 "_id": str(article["_id"]),
                 "title": article["title"],
                 "url": article["url"],
+                "published_date": article["published_date"]
                 # "text": blurb_texts[str(article["_id"])]
             } for article in articles]
 
