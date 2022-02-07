@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import FastAPI, HTTPException
 from search_service.encoder import SbertEncoder
 from search_service.indexer import FaissIndexer
@@ -7,6 +7,7 @@ from database.mongodb import prod_database as db
 from bson.objectid import ObjectId
 from search_service.exact_search import ExactSearch
 from fastapi.middleware.cors import CORSMiddleware
+from api.filter_results import filter_results
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
 origins = [
@@ -38,7 +39,8 @@ def read_root():
 
 
 @app.get("/search")
-def get_results(q: str):
+def get_results(q: str, articles: Optional[str] = None, categories: Optional[str] = None):
+
     if q:
         exact_search_results = get_exact_search_results(q)
         semantic_search_results = get_semantic_search_results(q)
@@ -56,6 +58,14 @@ def get_results(q: str):
 
         for _id in deduped_results:
             payload.append(deduped_results[_id])
+
+        # Filter results
+        request_filters = {
+            "articles": articles,
+            "categories": categories
+        }
+        payload = filter_results(payload, request_filters)
+
         return payload
 
     else:
@@ -117,6 +127,7 @@ def get_restaurant_payload_from_blurbs(_filter: "dict[str, Any]") -> "List[dict[
                 "_id": str(article["_id"]),
                 "title": article["title"],
                 "url": article["url"],
+                "published_date": article["published_date"]
                 # "text": blurb_texts[str(article["_id"])]
             } for article in articles]
 
