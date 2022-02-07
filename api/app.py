@@ -7,6 +7,7 @@ from database.mongodb import prod_database as db
 from bson.objectid import ObjectId
 from search_service.exact_search import ExactSearch
 from fastapi.middleware.cors import CORSMiddleware
+from api.filter_results import filter_results
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
 origins = [
@@ -58,29 +59,12 @@ def get_results(q: str, articles: Optional[str] = None, categories: Optional[str
         for _id in deduped_results:
             payload.append(deduped_results[_id])
 
-        # Filter results. TODO: Refactor
-        # payload = filter_results(payload)
-        if articles and len(articles) > 0:
-            articles_to_include = set(articles.split(","))
-
-            def filter_articles(entry):
-                for article in entry["articles"]:
-                    if article["_id"] in articles_to_include:
-                        return True
-                return False
-            payload = list(filter(filter_articles, payload))
-
-        # Filter categories
-        if categories and len(categories) > 0:
-            categories_to_include = set(categories.split(","))
-
-            def filter_articles(entry):
-                for category in entry["categories"]:
-                    if category in categories_to_include:
-                        return True
-                return False
-
-            payload = list(filter(filter_articles, payload))
+        # Filter results
+        request_filters = {
+            "articles": articles,
+            "categories": categories
+        }
+        payload = filter_results(payload, request_filters)
 
         return payload
 
