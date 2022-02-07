@@ -90,7 +90,7 @@ def get_results(q: str, articles: Optional[str] = None, categories: Optional[str
 
 def get_restaurant_address(restaurant: "dict[str, Any]") -> str:
     if restaurant["location"] and "display_address" in restaurant["location"]:
-        return restaurant["location"]["display_address"]
+        return " ".join(restaurant["location"]["display_address"])
     else:
         return restaurant["address"]
 
