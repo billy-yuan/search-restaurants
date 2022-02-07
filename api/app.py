@@ -64,7 +64,7 @@ def get_results(q: str):
 
 def get_restaurant_address(restaurant: "dict[str, Any]") -> str:
     if restaurant["location"] and "display_address" in restaurant["location"]:
-        return restaurant["location"]["display_address"]
+        return " ".join(restaurant["location"]["display_address"])
     else:
         return restaurant["address"]
 
