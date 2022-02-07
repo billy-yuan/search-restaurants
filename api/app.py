@@ -8,6 +8,8 @@ from bson.objectid import ObjectId
 from search_service.exact_search import ExactSearch
 from fastapi.middleware.cors import CORSMiddleware
 from api.filter_results import filter_results
+from database.redis_instance import redis_instance
+import json
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
 origins = [
@@ -40,8 +42,16 @@ def read_root():
 
 @app.get("/search")
 def get_results(q: str, articles: Optional[str] = None, categories: Optional[str] = None):
+    payload = []
+    if not q:
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
-    if q:
+    # Get initial payload from cache if available, otherwise pull from DB.
+    cache_result = redis_instance.get(q)
+
+    if cache_result:
+        payload = json.loads(cache_result)
+    else:
         exact_search_results = get_exact_search_results(q)
         semantic_search_results = get_semantic_search_results(q)
 
@@ -54,22 +64,18 @@ def get_results(q: str, articles: Optional[str] = None, categories: Optional[str
             if _id not in deduped_results:
                 deduped_results[_id] = result
 
-        payload = []
-
         for _id in deduped_results:
             payload.append(deduped_results[_id])
+        # Set cache if no filters
+        redis_instance.set(q, json.dumps(payload, default=str))
 
-        # Filter results
-        request_filters = {
-            "articles": articles,
-            "categories": categories
-        }
-        payload = filter_results(payload, request_filters)
+    # Filter results
+    request_filters = {
+        "articles": articles,
+        "categories": categories
+    }
 
-        return payload
-
-    else:
-        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+    return filter_results(payload, request_filters)
 
 
 def get_restaurant_address(restaurant: "dict[str, Any]") -> str:
