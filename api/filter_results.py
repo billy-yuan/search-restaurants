@@ -28,7 +28,6 @@ def filter_by_articles(payload: List["dict[str, Any]"], articles: str):
 
     if articles:
         articles_to_include = set(articles.split(","))
-        print(payload[:3], articles)
 
         def filter_articles(entry):
             for article in entry["articles"]:
@@ -40,15 +39,30 @@ def filter_by_articles(payload: List["dict[str, Any]"], articles: str):
         return payload
 
 
+def filter_by_price(payload: List["dict[str, Any]"], price: str):
+
+    if price:
+        prices_to_include = set(price.split(","))
+
+        def filter_prices(entry):
+            if entry["price"] in prices_to_include:
+                return True
+            return False
+        return list(filter(filter_prices, payload))
+    else:
+        return payload
+
+
 def filter_results(payload: List["dict[str, Any]"], filters: " dict[str, Any]"):
     result = payload
-
     for key in filters:
         if key == "categories":
             result = filter_by_categories(
                 payload=result, categories=filters[key])
         elif key == "articles":
             result = filter_by_articles(payload=result, articles=filters[key])
+        elif key == "price":
+            result = filter_by_price(payload=result, price=filters[key])
         else:
             raise ValueError("{} is not a valid filter.".format(key))
 

@@ -42,7 +42,10 @@ def read_root():
 
 
 @app.get("/search")
-def get_results(q: str, articles: Optional[str] = None, categories: Optional[str] = None):
+def get_results(q: str,
+                articles: Optional[str] = None,
+                categories: Optional[str] = None,
+                price: Optional[str] = None):
     payload = []
     if not q:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
@@ -73,7 +76,8 @@ def get_results(q: str, articles: Optional[str] = None, categories: Optional[str
     # Filter results
     request_filters = {
         "articles": articles,
-        "categories": categories
+        "categories": categories,
+        "price": price
     }
 
     return filter_results(payload, request_filters)
