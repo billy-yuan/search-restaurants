@@ -13,7 +13,8 @@ import json
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
 origins = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    load_env_var("CLIENT_ENDPOINT")
 ]
 app = FastAPI()
 app.add_middleware(
