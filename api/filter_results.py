@@ -1,6 +1,16 @@
 # take payload and filter
 
-from typing import Any, List
+from typing import Any, List, TypedDict
+
+
+class Coordinates(TypedDict):
+    lat: float
+    lng: float
+
+
+class CoordinatesCorners(TypedDict):
+    ne: str
+    sw: str
 
 
 def filter_by_categories(payload: List["dict[str, Any]"], categories: str):
@@ -53,6 +63,35 @@ def filter_by_price(payload: List["dict[str, Any]"], price: str):
         return payload
 
 
+def filter_by_coordinates(payload: List["dict[str, Any]"], coordinates_corners: CoordinatesCorners):
+    if coordinates_corners["ne"] and coordinates_corners["sw"]:
+
+        ne_lat = float(coordinates_corners["ne"].split(",")[0])
+        sw_lat = float(coordinates_corners["sw"].split(",")[0])
+        ne_lng = float(coordinates_corners["ne"].split(",")[1])
+        sw_lng = float(coordinates_corners["sw"].split(",")[1])
+
+        def filter_coordinates(entry):
+
+            if "coordinates" not in entry or not entry["coordinates"]:
+                print("nothing", entry["coordinates"])
+                return False
+
+            lat_range = sorted([ne_lat, sw_lat])
+            lng_range = sorted([ne_lng, sw_lng])
+
+            lat = entry["coordinates"]["latitude"]
+            lng = entry["coordinates"]["longitude"]
+
+            if lat >= lat_range[0] and lat <= lat_range[1] and lng >= lng_range[0] and lng <= lng_range[1]:
+                return True
+
+            return False
+        return list(filter(filter_coordinates, payload))
+    else:
+        return payload
+
+
 def filter_results(payload: List["dict[str, Any]"], filters: " dict[str, Any]"):
     result = payload
     for key in filters:
@@ -63,6 +102,9 @@ def filter_results(payload: List["dict[str, Any]"], filters: " dict[str, Any]"):
             result = filter_by_articles(payload=result, articles=filters[key])
         elif key == "price":
             result = filter_by_price(payload=result, price=filters[key])
+        elif key == "coordinates":
+            result = filter_by_coordinates(
+                payload=result, coordinates_corners=filters[key])
         else:
             raise ValueError("{} is not a valid filter.".format(key))
 

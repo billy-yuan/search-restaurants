@@ -45,7 +45,10 @@ def read_root():
 def get_results(q: str,
                 articles: Optional[str] = None,
                 categories: Optional[str] = None,
-                price: Optional[str] = None):
+                price: Optional[str] = None,
+                ne_bound: Optional[str] = None,
+                sw_bound: Optional[str] = None):
+
     payload = []
     if not q:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
@@ -77,7 +80,8 @@ def get_results(q: str,
     request_filters = {
         "articles": articles,
         "categories": categories,
-        "price": price
+        "price": price,
+        "coordinates": {"ne": ne_bound, "sw": sw_bound}
     }
 
     return filter_results(payload, request_filters)
