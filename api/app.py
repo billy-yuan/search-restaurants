@@ -84,7 +84,7 @@ def get_results(q: str,
         "coordinates": {"ne": ne_bound, "sw": sw_bound}
     }
 
-    return filter_results(payload, request_filters)
+    return filter_results(payload, request_filters)[:30]
 
 
 def get_restaurant_address(restaurant: "dict[str, Any]") -> str:
