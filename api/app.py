@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from search_service.exact_search import ExactSearch
 from fastapi.middleware.cors import CORSMiddleware
 from api.filter_results import filter_results
-from database.redis_instance import redis_instance
+from database.redis_instance import redis_instance, EXPIRE_SECONDS
 import json
 
 FILE_NAME = load_env_var("EMBEDDING_PATH")
@@ -57,6 +57,7 @@ def get_results(q: str,
     cache_result = redis_instance.get(q)
 
     if cache_result:
+        print("found {} in cache".format(q))
         payload = json.loads(cache_result)
     else:
         exact_search_results = get_exact_search_results(q)
@@ -75,6 +76,7 @@ def get_results(q: str,
             payload.append(deduped_results[_id])
         # Set cache if no filters
         redis_instance.set(q, json.dumps(payload, default=str))
+        redis_instance.expire(q, EXPIRE_SECONDS)
 
     # Filter results
     request_filters = {

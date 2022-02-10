@@ -74,7 +74,6 @@ def filter_by_coordinates(payload: List["dict[str, Any]"], coordinates_corners: 
         def filter_coordinates(entry):
 
             if "coordinates" not in entry or not entry["coordinates"]:
-                print("nothing", entry["coordinates"])
                 return False
 
             lat_range = sorted([ne_lat, sw_lat])
