@@ -54,12 +54,16 @@ def get_results(q: str,
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     # Get initial payload from cache if available, otherwise pull from DB.
-    cache_result = redis_instance.get(q)
+    if load_env_var("ENV_TYPE") == "PROD":
+        cache_result = redis_instance.get(q)
+    else:
+        cache_result = None
 
     if cache_result:
         print("found {} in cache".format(q))
         payload = json.loads(cache_result)
     else:
+        print("did not find {} in cache".format(q))
         exact_search_results = get_exact_search_results(q)
         semantic_search_results = get_semantic_search_results(q)
 
