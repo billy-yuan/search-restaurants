@@ -1,4 +1,6 @@
 # search-restaurants
+Back end to https://search-eater.netlify.app/
+
 
 API that takes a query and returns restaurants that were featured in articles most similar to the query. Restaurants are from Eater.com NY.
 
