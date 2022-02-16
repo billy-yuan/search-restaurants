@@ -4,8 +4,9 @@ Back end to https://search-eater.netlify.app/
 
 API that takes a query and returns restaurants that were featured in articles most similar to the query. Restaurants are from Eater.com NY.
 
-For the text search, semantic search is applied:
-* Sentence embeddings created using [Sentence Transformers](https://www.sbert.net/examples/applications/semantic-search/README.html).
+For the text search, both exact search and semantic search is applied:
+* For exact search, Atlas Search from Mongo DB is used.
+* For semantic search, sentence embeddings are created using [Sentence Transformers](https://www.sbert.net/examples/applications/semantic-search/README.html).
 * For fast searching of high dimensional vectors, [FAISS](https://github.com/facebookresearch/faiss) is used.
 * MongoDb is the database.
 
